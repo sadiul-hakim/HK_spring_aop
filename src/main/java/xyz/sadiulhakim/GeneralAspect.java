@@ -9,6 +9,8 @@ import org.springframework.stereotype.Component;
 @Component
 public class GeneralAspect {
 
+    // We can make a PointCut and use it in multiple places. It takes Designators.
+    // Or we can use Designators directly in Advice
     // Any method of LearnAopApplication class
     @Pointcut("execution(* xyz.sadiulhakim.LearnAopApplication.*(..))")
     public void publicApis() {
