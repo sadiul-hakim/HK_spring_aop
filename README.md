@@ -203,3 +203,139 @@ Calling the `errorMethod()`:
 | `@Around`         | Wraps the method, allows custom before/after logic |
 
 Use AOP to cleanly separate concerns like logging, monitoring, transactions, etc.
+
+## @Around
+
+@Around is the most powerful type of advice in Spring AOP. It wraps the method execution — you can run logic before,
+after, and even prevent or alter method execution.
+
+It uses ProceedingJoinPoint, which allows you to control whether the target method actually runs.
+
+## 🧠 Typical Use Cases:
+
+- Measuring method execution time
+- Security checks (e.g., deny execution based on condition)
+- Input validation
+- Result modification
+- Logging both input/output
+
+## How @Around advice can run code before, after, prevent execution, or alter results.
+
+We’ll use this simple service method as our target:
+
+```java
+public class MyService {
+    public String greet(String name) {
+        System.out.println("Inside greet(): Hello " + name);
+        return "Hello " + name;
+    }
+}
+```
+
+`joinPoint.proceed()` is the main magic
+
+### ✅ 1. Run Logic Before Method
+
+You just write code before calling proceed().
+
+```java
+
+@Around("execution(* com.example.demo.MyService.greet(..))")
+public Object beforeExample(ProceedingJoinPoint joinPoint) throws Throwable {
+    System.out.println("[Before] About to call: " + joinPoint.getSignature().getName());
+    return joinPoint.proceed(); // Call the actual method
+}
+
+```
+
+```
+[Before] About to call: greet
+Inside greet(): Hello John
+```
+
+### ✅ 2. Run Logic After Method
+
+Write code after proceed():
+
+```java
+
+@Around("execution(* com.example.demo.MyService.greet(..))")
+public Object afterExample(ProceedingJoinPoint joinPoint) throws Throwable {
+    Object result = joinPoint.proceed(); // Call the method
+    System.out.println("[After] Method finished: " + joinPoint.getSignature().getName());
+    return result;
+}
+
+```
+
+```
+Inside greet(): Hello John
+[After] Method finished: greet
+```
+
+### ✅ 3. Prevent Method Execution
+
+Just don't call proceed():
+
+```java
+
+@Around("execution(* com.example.demo.MyService.greet(..))")
+public Object preventExecutionExample(ProceedingJoinPoint joinPoint) throws Throwable {
+    System.out.println("[BLOCKED] Method call prevented: " + joinPoint.getSignature().getName());
+    return "Blocked by AOP";
+}
+```
+
+```
+[BLOCKED] Method call prevented: greet
+```
+
+### ✅ 4. Alter/Modify Result
+
+Change what the method returns:
+
+```java
+
+@Around("execution(* com.example.demo.MyService.greet(..))")
+public Object modifyResultExample(ProceedingJoinPoint joinPoint) throws Throwable {
+    Object originalResult = joinPoint.proceed();
+    System.out.println("Original result: " + originalResult);
+    return "[Modified] " + originalResult;
+}
+```
+
+```
+Inside greet(): Hello John
+Original result: Hello John
+```
+
+```
+[Modified] Hello John
+```
+
+### ✅ 5. Catch and Handle Exception
+
+Wrap proceed() in a try-catch block:
+
+```java
+
+@Around("execution(* com.example.demo.MyService.greet(..))")
+public Object exceptionHandlingExample(ProceedingJoinPoint joinPoint) throws Throwable {
+    try {
+        return joinPoint.proceed();
+    } catch (Throwable ex) {
+        System.out.println("[Caught Exception] " + ex.getMessage());
+        return "Fallback response due to error";
+    }
+}
+```
+
+## @Around Advice Summary Table
+
+| Behavior         | Code Placement                      | `proceed()` Called? |
+|------------------|-------------------------------------|---------------------|
+| Before logic     | Before `proceed()`                  | ✅                   |
+| After logic      | After `proceed()`                   | ✅                   |
+| Skip execution   | Don't call `proceed()`              | ❌                   |
+| Modify return    | Wrap result and return modified     | ✅                   |
+| Handle exception | Surround `proceed()` with try-catch | ✅ / ❌               |
