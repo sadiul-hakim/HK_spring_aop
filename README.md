@@ -190,6 +190,97 @@ Calling the `errorMethod()`:
 [AfterThrowing] Method: errorMethod, Exception: Something went wrong
 ```
 
+## 6. Pointcut Designators (execution, within, this, etc.)
+
+Spring AOP uses expressions to match join points. These expressions often begin with a **pointcut designator**, like
+`execution`, `within`, etc.
+
+### 📌 `execution` Designator
+
+Matches method execution join points.
+
+```java
+@Around("execution(* com.example.demo.MyService.greet(..))")
+```
+
+This matches:
+
+* Any return type (`*`)
+* In `MyService`
+* Named `greet`
+* Any arguments (`(..)`)
+
+### ✅ Common Designators
+
+| Designator         | Description                                                           |
+|--------------------|-----------------------------------------------------------------------|
+| `execution(...)`   | Match method execution (most common)                                  |
+| `within(...)`      | Match all join points within a certain type (class)                   |
+| `this(...)`        | Match proxies implementing a certain type                             |
+| `target(...)`      | Match target objects implementing a type                              |
+| `args(...)`        | Match methods taking specific argument types                          |
+| `@target(...)`     | Match classes annotated with a specific annotation                    |
+| `@within(...)`     | Match types (classes) annotated with a specific annotation            |
+| `@annotation(...)` | Match methods annotated with a specific annotation                    |
+| `@args(...)`       | Match where method arguments are annotated with a specific annotation |
+
+### 🧪 Example Combinations
+
+```java
+@Around("execution(* *(..)) && within(com.example.demo..*)")
+```
+
+Matches all methods inside `com.example.demo` package and sub-packages.
+
+```java
+@Before("@annotation(org.springframework.transaction.annotation.Transactional)")
+```
+
+Runs before any method annotated with `@Transactional`.
+
+```java
+@Around("execution(* *(..)) && args(java.lang.String)")
+```
+
+Matches any method that takes a single `String` argument.
+
+---
+
+## 7. Annotation-Based vs XML Configuration
+
+### ✅ Annotation-Based AOP (Recommended for Spring Boot)
+
+* Uses `@Aspect`, `@Before`, `@After`, etc.
+* Supports custom annotations (`@Around("@annotation(...)`)\`)
+* Easy to read and maintain
+
+### 🧾 XML-Based AOP (Legacy style)
+
+* Uses XML configuration in `applicationContext.xml`
+* Useful in non-annotation projects
+
+#### Example:
+
+```xml
+
+<aop:config>
+    <aop:aspect ref="loggingAspect">
+        <aop:pointcut id="logPointcut" expression="execution(* com.example.service.*.*(..))"/>
+        <aop:before pointcut-ref="logPointcut" method="logBefore"/>
+    </aop:aspect>
+</aop:config>
+```
+
+```java
+public class LoggingAspect {
+    public void logBefore() {
+        System.out.println("Logging before method");
+    }
+}
+```
+
+**Note**: XML config is rarely used today unless maintaining a legacy codebase.
+
 ---
 
 ## Summary
